@@ -1,42 +1,191 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css"
-        integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
-        integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="./css/style.css" />
-    <script src="js/script.js"></script>
-    <title>Gun Shooter Game</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Basic Shooter Game</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-    <nav class="navbar navbar-dark bg-dark">
-        <a class="navbar-brand" href="/Gun-Shoot-Game-using-HTML-javaScript/">Gun Shooter Game</a>
-        <a class="btn btn-outline-light" href="https://github.com/chetanguptamrt/Gun-Shoot-Game-using-HTML-javaScript"
-            target="_blank">Source code</a>
-    </nav>
-
-    <div class="container-md mt-4 mb-2">
-        <div class="row">
-            <div id="canvas" class="col-12 canvas">
-                <!-- <div class="ballon-green ballon">
-                    <div class="dhaga"></div>
-                </div> -->
-            </div>
-        </div>
-    </div>
-    <div class="text-center">
-        <p class="m-0 p-0 text-success">Enjoy the game</p>
-        <p class="text-danger">Note: Use PC & Mouse for Better Experience</p>
-    </div>
-    <footer class="bg-dark text-center p-2">
-        <p class="p-0 m-0">Copyright &copy; 2021 Chetan Gupta<br/>All right reserved</p>
-    </footer>
-
+  <div class="game-container">
+    <canvas id="gameCanvas"></canvas>
+    <div id="score">Score: 0</div>
+  </div>
+  <script src="script.js"></script>
 </body>
-
 </html>
+/* style.css */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #1e1e1e;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.game-container {
+  position: relative;
+}
+
+canvas {
+  background-color: #222;
+  display: block;
+  border: 2px solid white;
+}
+
+#score {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  color: white;
+  font-size: 20px;
+  font-family: Arial, sans-serif;
+}
+// script.js
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+// Set up the canvas size
+canvas.width = 800;
+canvas.height = 600;
+
+// Player settings
+const player = {
+  x: canvas.width / 2,
+  y: canvas.height / 2,
+  radius: 15,
+  color: 'green',
+  speed: 5,
+  angle: 0
+};
+
+// Bullet settings
+const bullets = [];
+const bulletSpeed = 7;
+
+// Target settings
+const target = {
+  x: Math.random() * canvas.width,
+  y: Math.random() * canvas.height,
+  radius: 20,
+  color: 'red'
+};
+
+// Score variable
+let score = 0;
+
+// Listen to mouse movement for aiming
+canvas.addEventListener('mousemove', (event) => {
+  const dx = event.clientX - canvas.offsetLeft - player.x;
+  const dy = event.clientY - canvas.offsetTop - player.y;
+  player.angle = Math.atan2(dy, dx);
+});
+
+// Listen for mouse click to shoot
+canvas.addEventListener('click', () => {
+  const bullet = {
+    x: player.x,
+    y: player.y,
+    radius: 5,
+    color: 'white',
+    angle: player.angle
+  };
+  bullets.push(bullet);
+});
+
+// Function to update the player's position
+function movePlayer() {
+  // No movement logic yet, the player is fixed in the center
+}
+
+// Function to update the bullet's position
+function moveBullets() {
+  for (let i = 0; i < bullets.length; i++) {
+    const bullet = bullets[i];
+    bullet.x += Math.cos(bullet.angle) * bulletSpeed;
+    bullet.y += Math.sin(bullet.angle) * bulletSpeed;
+
+    // Remove bullet if it goes off-screen
+    if (bullet.x < 0 || bullet.x > canvas.width || bullet.y < 0 || bullet.y > canvas.height) {
+      bullets.splice(i, 1);
+      i--;
+    }
+  }
+}
+
+// Function to check if a bullet hits the target
+function checkCollision() {
+  for (let i = 0; i < bullets.length; i++) {
+    const bullet = bullets[i];
+    const dx = bullet.x - target.x;
+    const dy = bullet.y - target.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance < bullet.radius + target.radius) {
+      // If collision happens, reset target position and update score
+      target.x = Math.random() * canvas.width;
+      target.y = Math.random() * canvas.height;
+      score++;
+      document.getElementById('score').textContent = `Score: ${score}`;
+
+      // Remove the bullet after hit
+      bullets.splice(i, 1);
+      i--;
+    }
+  }
+}
+
+// Function to draw the player
+function drawPlayer() {
+  ctx.beginPath();
+  ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+  ctx.fillStyle = player.color;
+  ctx.fill();
+  ctx.closePath();
+}
+
+// Function to draw the bullets
+function drawBullets() {
+  for (let i = 0; i < bullets.length; i++) {
+    const bullet = bullets[i];
+    ctx.beginPath();
+    ctx.arc(bullet.x, bullet.y, bullet.radius, 0, Math.PI * 2);
+    ctx.fillStyle = bullet.color;
+    ctx.fill();
+    ctx.closePath();
+  }
+}
+
+// Function to draw the target
+function drawTarget() {
+  ctx.beginPath();
+  ctx.arc(target.x, target.y, target.radius, 0, Math.PI * 2);
+  ctx.fillStyle = target.color;
+  ctx.fill();
+  ctx.closePath();
+}
+
+// Game loop to update the canvas
+function gameLoop() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+
+  movePlayer();
+  moveBullets();
+  checkCollision();
+
+  drawPlayer();
+  drawBullets();
+  drawTarget();
+
+  requestAnimationFrame(gameLoop); // Recursively call the game loop
+}
+
+// Start the game loop
+gameLoop();
